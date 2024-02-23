@@ -1,0 +1,18 @@
+#!/bin/bash
+container_id_or_name=$1
+# 获取容器资源使用情况
+cpu_usage=$(docker stats --no-stream --format "{{.CPUPerc}}" "$container_id_or_name")
+memory_used=$(docker stats --no-stream --format "{{.MemUsage}}" "$container_id_or_name")
+network_rx=$(docker exec "$container_id_or_name" cat /sys/class/net/eth0/statistics/rx_bytes)
+network_tx=$(docker exec "$container_id_or_name" cat /sys/class/net/eth0/statistics/tx_bytes)
+
+# 将网络IO单位转换为MB
+network_rx_mb=$(echo "scale=2; $network_rx / 1024 / 1024" | bc)
+network_tx_mb=$(echo "scale=2; $network_tx / 1024 / 1024" | bc)
+
+# 输出表格形式的资源使用情况
+echo -e "Resource\tUsed"
+echo -e "CPU\t$cpu_usage"
+echo -e "Memory\t$memory_used"
+echo -e "Network RX\t$network_rx_mb MB"
+echo -e "Network TX\t$network_tx_mb MB"
